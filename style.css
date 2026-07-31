@@ -1,122 +1,98 @@
-/* Global Reset and Light Mode Variables (Default) */
-:root {
-    --bg-color: #f4f7f6;
-    --text-color: #333333;
-    --card-bg: #ffffff;
-    --footer-bg: #333333;
-    --footer-text: #ffffff;
-    --button-bg: #667eea;
-    --button-hover: #5563c1;
-}
-
-/* Dark Mode Theme Variables override light mode when dark-mode class is active */
-body.dark-mode {
-    --bg-color: #121212;
-    --text-color: #e0e0e0;
-    --card-bg: #1e1e1e;
-    --footer-bg: #000000;
-    --footer-text: #b0b0b0;
-    --button-bg: #bb86fc;
-    --button-hover: #9955e8;
-}
-
+/* General page styling: sets default background and text colors */
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    justify-content: space-between;
-    align-items: center;
-    text-align: center;
-    transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f0f4f8;
+  color: #333333;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  /* Smooth transition effect when switching background and text colors */
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Theme Toggle Button Positioning */
-.theme-toggle-container {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    padding: 1rem 2rem;
-    box-sizing: border-box;
-}
-
-#themeToggleBtn {
-    background-color: transparent;
-    border: 2px solid var(--text-color);
-    color: var(--text-color);
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 0;
-}
-
-#themeToggleBtn:hover {
-    background-color: var(--text-color);
-    color: var(--bg-color);
-}
-
-/* Header Styling */
+/* Header section styling with a modern hero color */
 header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    width: 100%;
-    padding: 3rem 1rem;
+  background-color: #4a90e2;
+  color: white;
+  width: 100%;
+  text-align: center;
+  padding: 2rem 1rem;
 }
 
-header h1 {
-    margin: 0;
-    font-size: 2.5rem;
-}
-
-header p {
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-/* Main Content Styling */
+/* Main container layout */
 main {
-    padding: 2rem;
-    width: 100%;
-    max-width: 600px;
+  width: 90%;
+  max-width: 600px;
+  margin-top: 2rem;
 }
 
+/* Card component styling for clean text display */
 .card {
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease;
+  background-color: white;
+  color: #333333;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Button Styling */
+/* General button default state styling */
 button {
-    background-color: var(--button-bg);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 1rem;
+  background-color: #4a90e2;
+  color: white;
+  border: 2px solid white;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  margin: 0.5rem;
 }
 
+/* Hover effect for buttons */
 button:hover {
-    background-color: var(--button-hover);
+  background-color: #357abd;
+  transform: scale(1.03);
 }
 
-/* Footer Styling */
+/* Secret message styling updated by JS */
+#message {
+  margin-top: 1.5rem;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+/* Footer layout glued to bottom of screen */
 footer {
-    background-color: var(--footer-bg);
-    color: var(--footer-text);
-    width: 100%;
-    padding: 1rem 0;
-    font-size: 0.9rem;
-    transition: background-color 0.3s ease, color 0.3s ease;
+  margin-top: auto;
+  padding: 1rem;
+  color: #777777;
+}
+
+/* ===================================================
+   DARK MODE STYLES
+   These styles apply when the 'dark-mode' class is added to body by JavaScript
+   =================================================== */
+
+body.dark-mode {
+  /* Navy blue background color as requested */
+  background-color: #0a192f;
+  /* White text color as requested */
+  color: #ffffff;
+}
+
+/* Adjust card background in dark mode so content stays easy to read */
+body.dark-mode .card {
+  background-color: #112240;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* Adjust footer text color in dark mode */
+body.dark-mode footer {
+  color: #8892b0;
 }
