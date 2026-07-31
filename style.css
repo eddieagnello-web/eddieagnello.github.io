@@ -71,7 +71,7 @@ button:hover {
 
 /* Snake Game Canvas Styling */
 #snakeCanvas {
-  background-color: #1a1a2e; /* Dark arcade arena color */
+  background-color: #1a1a2e; /* Dark arcade arena background */
   border-radius: 10px;
   border: 4px solid #16213e;
   max-width: 100%;
