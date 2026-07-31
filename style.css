@@ -1,0 +1,72 @@
+/* Global Reset and Styling */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    color: #333333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+}
+
+/* Header Styling */
+header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    width: 100%;
+    padding: 3rem 1rem;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Main Content Styling */
+main {
+    padding: 2rem;
+    width: 100%;
+    max-width: 600px;
+}
+
+.card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Styling */
+button {
+    background-color: #667eea;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 1rem;
+}
+
+button:hover {
+    background-color: #5563c1;
+}
+
+/* Footer Styling */
+footer {
+    background-color: #333333;
+    color: white;
+    width: 100%;
+    padding: 1rem 0;
+    font-size: 0.9rem;
+}
