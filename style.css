@@ -69,11 +69,12 @@ button:hover {
   color: #2e7d32;
 }
 
-/* Snake Game Canvas Styling */
-#snakeCanvas {
-  background-color: #1a1a2e; /* Dark arcade arena background */
+/* Flappy Bird Canvas Styling */
+#flappyCanvas {
+  background-color: #70c5ce; /* Sky blue background */
   border-radius: 10px;
-  border: 4px solid #16213e;
+  border: 4px solid #4a90e2;
+  cursor: pointer;
   max-width: 100%;
 }
 
