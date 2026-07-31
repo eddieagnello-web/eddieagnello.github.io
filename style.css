@@ -62,19 +62,18 @@ button:hover {
   transform: scale(1.03);
 }
 
-/* Secret message styling updated by JS */
+/* Message styling updated by JS */
 #message, #gameStatusMessage {
   margin-top: 1rem;
   font-weight: bold;
   color: #2e7d32;
 }
 
-/* Mini-Golf Canvas Styling */
-#golfCanvas {
-  background-color: #2e7d32; /* Grass green color */
+/* Snake Game Canvas Styling */
+#snakeCanvas {
+  background-color: #1a1a2e; /* Dark arcade arena color */
   border-radius: 10px;
-  border: 4px solid #1b4d1f;
-  cursor: crosshair;
+  border: 4px solid #16213e;
   max-width: 100%;
 }
 
@@ -85,6 +84,7 @@ button:hover {
   align-items: center;
   font-weight: bold;
   margin-top: 0.5rem;
+  font-size: 1.1rem;
 }
 
 /* Footer layout glued to bottom of screen */
