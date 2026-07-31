@@ -1,7 +1,7 @@
-// Wait for the HTML elements to finish loading before running script
+// Wait for all HTML elements to load before executing JavaScript
 document.addEventListener("DOMContentLoaded", () => {
   
-  // --- EXISTING FEATURES: Dark Mode & Magic Button ---
+  // --- CORE FEATURES: Dark Mode & Magic Button ---
   const magicBtn = document.getElementById("magicBtn");
   const message = document.getElementById("message");
   const themeToggleBtn = document.getElementById("themeToggleBtn");
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- SNAKE ARENA VS AI GAME LOGIC ---
+  // --- SNAKE ARENA GAME ENGINE ---
   const canvas = document.getElementById("snakeCanvas");
   if (!canvas) return;
 
@@ -32,10 +32,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const gameStatusMessage = document.getElementById("gameStatusMessage");
   const restartBtn = document.getElementById("restartSnakeBtn");
 
-  const gridSize = 20;
-  const tileCount = canvas.width / gridSize;
+  const gridSize = 20; // Size of each grid block in pixels
+  const tileCount = canvas.width / gridSize; // 20 tiles wide x 20 tiles high
 
-  // Player state
+  // Game state variables
   let player = {
     body: [],
     dx: gridSize,
@@ -44,32 +44,32 @@ document.addEventListener("DOMContentLoaded", () => {
     alive: true
   };
 
-  // AI Opponents state array
   let aiSnakes = [];
   let food = { x: 0, y: 0 };
   let gameInterval = null;
+  let gameRunning = false;
 
-  // Initialize and start the game loop
+  // Initialize and start a brand new game session
   function startGame() {
-    // Player spawn (Green/Cyan)
+    // Reset player snake
     player.body = [
-      { x: 5 * gridSize, y: 5 * gridSize },
-      { x: 4 * gridSize, y: 5 * gridSize },
-      { x: 3 * gridSize, y: 5 * gridSize }
+      { x: 5 * gridSize, y: 10 * gridSize },
+      { x: 4 * gridSize, y: 10 * gridSize },
+      { x: 3 * gridSize, y: 10 * gridSize }
     ];
     player.dx = gridSize;
     player.dy = 0;
     player.score = 0;
     player.alive = true;
 
-    // AI Bots spawn (Red & Purple opponents)
+    // Reset AI bot opponents
     aiSnakes = [
       {
         id: "Bot Alpha",
         color: "#ff4757", // Red
         body: [
-          { x: 15 * gridSize, y: 15 * gridSize },
-          { x: 16 * gridSize, y: 15 * gridSize }
+          { x: 15 * gridSize, y: 5 * gridSize },
+          { x: 16 * gridSize, y: 5 * gridSize }
         ],
         dx: -gridSize,
         dy: 0,
@@ -79,8 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
         id: "Bot Beta",
         color: "#ffa502", // Orange
         body: [
-          { x: 15 * gridSize, y: 5 * gridSize },
-          { x: 15 * gridSize, y: 6 * gridSize }
+          { x: 15 * gridSize, y: 15 * gridSize },
+          { x: 15 * gridSize, y: 16 * gridSize }
         ],
         dx: 0,
         dy: -gridSize,
@@ -89,102 +89,122 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
 
     if (scoreDisplay) scoreDisplay.textContent = player.score;
-    if (gameStatusMessage) gameStatusMessage.textContent = "Battle in progress! Beat the AI bots!";
+    if (gameStatusMessage) gameStatusMessage.textContent = "🎮 Battle in progress! Eat food to grow!";
 
     spawnFood();
+    gameRunning = true;
 
+    // Clear any previous running loop and set interval to run every 120ms
     if (gameInterval) clearInterval(gameInterval);
-    gameInterval = setInterval(gameLoop, 110);
+    gameInterval = setInterval(gameLoop, 120);
   }
 
-  // Spawn glowing food at random position
+  // Spawn food at a random position not currently occupied
   function spawnFood() {
     food.x = Math.floor(Math.random() * tileCount) * gridSize;
     food.y = Math.floor(Math.random() * tileCount) * gridSize;
   }
 
-  // Decide AI next move direction towards the food while attempting basic obstacle avoidance
-  function updateAIMovement(bot) {
-    if (!bot.alive) return;
-
+  // AI Logic: Determines smart next direction for computer bots
+  function getAIMove(bot) {
     const head = bot.body[0];
-    let possibleMoves = [
+    const directions = [
       { dx: gridSize, dy: 0 },
       { dx: -gridSize, dy: 0 },
       { dx: 0, dy: gridSize },
       { dx: 0, dy: -gridSize }
     ];
 
-    // Filter out reversing into its own neck
-    possibleMoves = possibleMoves.filter(m => !(m.dx === -bot.dx && m.dy === -bot.dy));
+    // Filter out reversing directly backwards into body
+    const validDirections = directions.filter(dir => !(dir.dx === -bot.dx && dir.dy === -bot.dy));
 
-    // Simple pathfinding: Pick the move that brings bot closest to food without hitting walls
-    let bestMove = possibleMoves[0];
-    let bestDistance = Infinity;
+    let bestDir = validDirections[0];
+    let minDistance = Infinity;
 
-    possibleMoves.forEach(move => {
-      const nextX = head.x + move.dx;
-      const nextY = head.y + move.dy;
+    // Check each direction for safe tiles closer to food
+    validDirections.forEach(dir => {
+      const nextX = head.x + dir.dx;
+      const nextY = head.y + dir.dy;
 
-      // Check wall boundary safety
+      // Ensure the move stays inside arena borders
       if (nextX >= 0 && nextX < canvas.width && nextY >= 0 && nextY < canvas.height) {
         const dist = Math.hypot(nextX - food.x, nextY - food.y);
-        if (dist < bestDistance) {
-          bestDistance = dist;
-          bestMove = move;
+        if (dist < minDistance) {
+          minDistance = dist;
+          bestDir = dir;
         }
       }
     });
 
-    if (bestMove) {
-      bot.dx = bestMove.dx;
-      bot.dy = bestMove.dy;
-    }
+    return bestDir;
   }
 
-  // Main game tick loop
+  // Main tick loop that updates positions and renders the frame
   function gameLoop() {
-    // 1. Move Player
-    if (player.alive) {
-      const pHead = { x: player.body[0].x + player.dx, y: player.body[0].y + player.dy };
+    if (!gameRunning) return;
 
-      // Wall collision check
-      if (pHead.x < 0 || pHead.x >= canvas.width || pHead.y < 0 || pHead.y >= canvas.height) {
+    // 1. Move Player Snake
+    if (player.alive) {
+      const newHead = { x: player.body[0].x + player.dx, y: player.body[0].y + player.dy };
+
+      // Check wall collision
+      if (newHead.x < 0 || newHead.x >= canvas.width || newHead.y < 0 || newHead.y >= canvas.height) {
         player.alive = false;
       }
 
-      // Self-collision check
+      // Check self-collision
       for (let segment of player.body) {
-        if (pHead.x === segment.x && pHead.y === segment.y) player.alive = false;
+        if (newHead.x === segment.x && newHead.y === segment.y) {
+          player.alive = false;
+        }
       }
 
+      // Check collision with AI snake bodies
+      aiSnakes.forEach(bot => {
+        if (bot.alive) {
+          bot.body.forEach(segment => {
+            if (newHead.x === segment.x && newHead.y === segment.y) {
+              player.alive = false;
+            }
+          });
+        }
+      });
+
       if (player.alive) {
-        player.body.unshift(pHead);
-        if (pHead.x === food.x && pHead.y === food.y) {
+        player.body.unshift(newHead);
+
+        // Check if player eats food
+        if (newHead.x === food.x && newHead.y === food.y) {
           player.score += 10;
           if (scoreDisplay) scoreDisplay.textContent = player.score;
           spawnFood();
         } else {
-          player.body.pop();
+          player.body.pop(); // Remove tail if no food eaten
         }
       }
     }
 
-    // 2. Move AI Snakes
+    // 2. Move AI Opponents
     aiSnakes.forEach(bot => {
       if (!bot.alive) return;
 
-      updateAIMovement(bot);
+      const nextMove = getAIMove(bot);
+      if (nextMove) {
+        bot.dx = nextMove.dx;
+        bot.dy = nextMove.dy;
+      }
 
       const botHead = { x: bot.body[0].x + bot.dx, y: bot.body[0].y + bot.dy };
 
-      // AI Wall Collision
+      // AI wall collision check
       if (botHead.x < 0 || botHead.x >= canvas.width || botHead.y < 0 || botHead.y >= canvas.height) {
         bot.alive = false;
         return;
       }
 
       bot.body.unshift(botHead);
+
+      // Check if AI eats food
       if (botHead.x === food.x && botHead.y === food.y) {
         spawnFood();
       } else {
@@ -192,48 +212,55 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Check if player died
+    // Check if game ends (Player died)
     if (!player.alive) {
+      gameRunning = false;
       clearInterval(gameInterval);
-      if (gameStatusMessage) gameStatusMessage.textContent = "💥 Game Over! The AI survived. Try again!";
+      if (gameStatusMessage) gameStatusMessage.textContent = "💥 Game Over! You crashed. Press Restart to try again!";
     }
 
     draw();
   }
 
-  // Render game elements on canvas
+  // Draw graphics onto canvas
   function draw() {
+    // Fill canvas background
     ctx.fillStyle = "#1a1a2e";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Food
+    // Draw glowing Food dot
     ctx.fillStyle = "#2ed573";
     ctx.beginPath();
     ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2 - 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw Player Snake (Blue / Cyan)
+    // Draw Player Snake (Cyan / Blue)
     if (player.alive) {
-      player.body.forEach((seg, i) => {
-        ctx.fillStyle = i === 0 ? "#00d2d3" : "#54a0ff";
-        ctx.fillRect(seg.x + 1, seg.y + 1, gridSize - 2, gridSize - 2);
+      player.body.forEach((segment, index) => {
+        ctx.fillStyle = index === 0 ? "#00d2d3" : "#54a0ff";
+        ctx.fillRect(segment.x + 1, segment.y + 1, gridSize - 2, gridSize - 2);
       });
     }
 
-    // Draw AI Snakes
+    // Draw AI Bot Snakes (Red & Orange)
     aiSnakes.forEach(bot => {
       if (bot.alive) {
-        bot.body.forEach(seg => {
+        bot.body.forEach((segment, index) => {
           ctx.fillStyle = bot.color;
-          ctx.fillRect(seg.x + 1, seg.y + 1, gridSize - 2, gridSize - 2);
+          ctx.fillRect(segment.x + 1, segment.y + 1, gridSize - 2, gridSize - 2);
         });
       }
     });
   }
 
-  // Keyboard controls for player
+  // Keyboard Event Listener with e.preventDefault() so page doesn't scroll when playing!
   window.addEventListener("keydown", (e) => {
     const key = e.key.toLowerCase();
+
+    if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) {
+      e.preventDefault(); // Prevents browser scrolling while using game keys
+    }
+
     if ((key === "arrowup" || key === "w") && player.dy === 0) {
       player.dx = 0;
       player.dy = -gridSize;
@@ -249,7 +276,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  if (restartBtn) restartBtn.addEventListener("click", startGame);
+  // Attach button click event to start game
+  if (restartBtn) {
+    restartBtn.addEventListener("click", startGame);
+  }
 
+  // Draw initial blank state on load
   draw();
 });
