@@ -23,264 +23,210 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- SNAKE ARENA GAME ENGINE ---
-  const canvas = document.getElementById("snakeCanvas");
+  // --- FLAPPY BIRD GAME ENGINE ---
+  const canvas = document.getElementById("flappyCanvas");
   if (!canvas) return;
 
   const ctx = canvas.getContext("2d");
   const scoreDisplay = document.getElementById("scoreDisplay");
+  const highScoreDisplay = document.getElementById("highScoreDisplay");
   const gameStatusMessage = document.getElementById("gameStatusMessage");
-  const restartBtn = document.getElementById("restartSnakeBtn");
+  const restartBtn = document.getElementById("restartGameBtn");
 
-  const gridSize = 20; // Size of each grid block in pixels
-  const tileCount = canvas.width / gridSize; // 20 tiles wide x 20 tiles high
+  // Game Variables
+  let bird = { x: 50, y: 150, width: 24, height: 24, gravity: 0.25, lift: -5.5, velocity: 0 };
+  let pipes = [];
+  let frameCount = 0;
+  let score = 0;
+  let highScore = 0;
+  let isPlaying = false;
+  let isGameOver = false;
+  let animationId = null;
 
-  // Game state variables
-  let player = {
-    body: [],
-    dx: gridSize,
-    dy: 0,
-    score: 0,
-    alive: true
-  };
+  // Pipe Settings
+  const pipeWidth = 52;
+  const pipeGap = 110;
+  const pipeSpeed = 2;
 
-  let aiSnakes = [];
-  let food = { x: 0, y: 0 };
-  let gameInterval = null;
-  let gameRunning = false;
+  function flap() {
+    if (isGameOver) {
+      startGame();
+      return;
+    }
+    if (!isPlaying) {
+      isPlaying = true;
+    }
+    bird.velocity = bird.lift;
+  }
 
-  // Initialize and start a brand new game session
   function startGame() {
-    // Reset player snake
-    player.body = [
-      { x: 5 * gridSize, y: 10 * gridSize },
-      { x: 4 * gridSize, y: 10 * gridSize },
-      { x: 3 * gridSize, y: 10 * gridSize }
-    ];
-    player.dx = gridSize;
-    player.dy = 0;
-    player.score = 0;
-    player.alive = true;
+    bird.y = 150;
+    bird.velocity = 0;
+    pipes = [];
+    score = 0;
+    frameCount = 0;
+    isPlaying = false;
+    isGameOver = false;
 
-    // Reset AI bot opponents
-    aiSnakes = [
-      {
-        id: "Bot Alpha",
-        color: "#ff4757", // Red
-        body: [
-          { x: 15 * gridSize, y: 5 * gridSize },
-          { x: 16 * gridSize, y: 5 * gridSize }
-        ],
-        dx: -gridSize,
-        dy: 0,
-        alive: true
-      },
-      {
-        id: "Bot Beta",
-        color: "#ffa502", // Orange
-        body: [
-          { x: 15 * gridSize, y: 15 * gridSize },
-          { x: 15 * gridSize, y: 16 * gridSize }
-        ],
-        dx: 0,
-        dy: -gridSize,
-        alive: true
-      }
-    ];
+    if (scoreDisplay) scoreDisplay.textContent = score;
+    if (gameStatusMessage) gameStatusMessage.textContent = "Click or Press Space to Flap!";
 
-    if (scoreDisplay) scoreDisplay.textContent = player.score;
-    if (gameStatusMessage) gameStatusMessage.textContent = "🎮 Battle in progress! Eat food to grow!";
-
-    spawnFood();
-    gameRunning = true;
-
-    // Clear any previous running loop and set interval to run every 120ms
-    if (gameInterval) clearInterval(gameInterval);
-    gameInterval = setInterval(gameLoop, 120);
+    if (animationId) cancelAnimationFrame(animationId);
+    gameLoop();
   }
 
-  // Spawn food at a random position not currently occupied
-  function spawnFood() {
-    food.x = Math.floor(Math.random() * tileCount) * gridSize;
-    food.y = Math.floor(Math.random() * tileCount) * gridSize;
-  }
+  function update() {
+    if (!isPlaying || isGameOver) return;
 
-  // AI Logic: Determines smart next direction for computer bots
-  function getAIMove(bot) {
-    const head = bot.body[0];
-    const directions = [
-      { dx: gridSize, dy: 0 },
-      { dx: -gridSize, dy: 0 },
-      { dx: 0, dy: gridSize },
-      { dx: 0, dy: -gridSize }
-    ];
+    // Apply gravity to bird velocity
+    bird.velocity += bird.gravity;
+    bird.y += bird.velocity;
 
-    // Filter out reversing directly backwards into body
-    const validDirections = directions.filter(dir => !(dir.dx === -bot.dx && dir.dy === -bot.dy));
+    // Ground and Ceiling Collisions
+    if (bird.y + bird.height >= canvas.height - 20) {
+      bird.y = canvas.height - 20 - bird.height;
+      triggerGameOver();
+    }
+    if (bird.y <= 0) {
+      bird.y = 0;
+      bird.velocity = 0;
+    }
 
-    let bestDir = validDirections[0];
-    let minDistance = Infinity;
+    // Spawn pipes every 100 frames
+    frameCount++;
+    if (frameCount % 100 === 0) {
+      const minHeight = 40;
+      const maxHeight = canvas.height - pipeGap - 60;
+      const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
 
-    // Check each direction for safe tiles closer to food
-    validDirections.forEach(dir => {
-      const nextX = head.x + dir.dx;
-      const nextY = head.y + dir.dy;
-
-      // Ensure the move stays inside arena borders
-      if (nextX >= 0 && nextX < canvas.width && nextY >= 0 && nextY < canvas.height) {
-        const dist = Math.hypot(nextX - food.x, nextY - food.y);
-        if (dist < minDistance) {
-          minDistance = dist;
-          bestDir = dir;
-        }
-      }
-    });
-
-    return bestDir;
-  }
-
-  // Main tick loop that updates positions and renders the frame
-  function gameLoop() {
-    if (!gameRunning) return;
-
-    // 1. Move Player Snake
-    if (player.alive) {
-      const newHead = { x: player.body[0].x + player.dx, y: player.body[0].y + player.dy };
-
-      // Check wall collision
-      if (newHead.x < 0 || newHead.x >= canvas.width || newHead.y < 0 || newHead.y >= canvas.height) {
-        player.alive = false;
-      }
-
-      // Check self-collision
-      for (let segment of player.body) {
-        if (newHead.x === segment.x && newHead.y === segment.y) {
-          player.alive = false;
-        }
-      }
-
-      // Check collision with AI snake bodies
-      aiSnakes.forEach(bot => {
-        if (bot.alive) {
-          bot.body.forEach(segment => {
-            if (newHead.x === segment.x && newHead.y === segment.y) {
-              player.alive = false;
-            }
-          });
-        }
+      pipes.push({
+        x: canvas.width,
+        top: topHeight,
+        bottom: canvas.height - topHeight - pipeGap,
+        passed: false
       });
-
-      if (player.alive) {
-        player.body.unshift(newHead);
-
-        // Check if player eats food
-        if (newHead.x === food.x && newHead.y === food.y) {
-          player.score += 10;
-          if (scoreDisplay) scoreDisplay.textContent = player.score;
-          spawnFood();
-        } else {
-          player.body.pop(); // Remove tail if no food eaten
-        }
-      }
     }
 
-    // 2. Move AI Opponents
-    aiSnakes.forEach(bot => {
-      if (!bot.alive) return;
+    // Move pipes and check collisions
+    pipes.forEach((pipe) => {
+      pipe.x -= pipeSpeed;
 
-      const nextMove = getAIMove(bot);
-      if (nextMove) {
-        bot.dx = nextMove.dx;
-        bot.dy = nextMove.dy;
+      // Check collision with Top Pipe
+      if (
+        bird.x + bird.width > pipe.x &&
+        bird.x < pipe.x + pipeWidth &&
+        bird.y < pipe.top
+      ) {
+        triggerGameOver();
       }
 
-      const botHead = { x: bot.body[0].x + bot.dx, y: bot.body[0].y + bot.dy };
-
-      // AI wall collision check
-      if (botHead.x < 0 || botHead.x >= canvas.width || botHead.y < 0 || botHead.y >= canvas.height) {
-        bot.alive = false;
-        return;
+      // Check collision with Bottom Pipe
+      if (
+        bird.x + bird.width > pipe.x &&
+        bird.x < pipe.x + pipeWidth &&
+        bird.y + bird.height > canvas.height - pipe.bottom
+      ) {
+        triggerGameOver();
       }
 
-      bot.body.unshift(botHead);
-
-      // Check if AI eats food
-      if (botHead.x === food.x && botHead.y === food.y) {
-        spawnFood();
-      } else {
-        bot.body.pop();
+      // Check if bird passed the pipe successfully
+      if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+        pipe.passed = true;
+        score++;
+        if (scoreDisplay) scoreDisplay.textContent = score;
+        if (score > highScore) {
+          highScore = score;
+          if (highScoreDisplay) highScoreDisplay.textContent = highScore;
+        }
       }
     });
 
-    // Check if game ends (Player died)
-    if (!player.alive) {
-      gameRunning = false;
-      clearInterval(gameInterval);
-      if (gameStatusMessage) gameStatusMessage.textContent = "💥 Game Over! You crashed. Press Restart to try again!";
-    }
-
-    draw();
+    // Remove off-screen pipes
+    pipes = pipes.filter((pipe) => pipe.x + pipeWidth > 0);
   }
 
-  // Draw graphics onto canvas
   function draw() {
-    // Fill canvas background
-    ctx.fillStyle = "#1a1a2e";
+    // 1. Draw Sky Background
+    ctx.fillStyle = "#70c5ce";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw glowing Food dot
-    ctx.fillStyle = "#2ed573";
+    // 2. Draw Pipes
+    pipes.forEach((pipe) => {
+      ctx.fillStyle = "#73bf2e";
+      ctx.strokeStyle = "#53801b";
+      ctx.lineWidth = 3;
+
+      // Top Pipe
+      ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+      ctx.strokeRect(pipe.x, 0, pipeWidth, pipe.top);
+
+      // Bottom Pipe
+      ctx.fillRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
+      ctx.strokeRect(pipe.x, canvas.height - pipe.bottom, pipeWidth, pipe.bottom);
+    });
+
+    // 3. Draw Ground
+    ctx.fillStyle = "#ded895";
+    ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+    ctx.fillStyle = "#73bf2e";
+    ctx.fillRect(0, canvas.height - 20, canvas.width, 4);
+
+    // 4. Draw Bird (Yellow circle with wing and eye detail)
+    ctx.fillStyle = "#f1c40f";
     ctx.beginPath();
-    ctx.arc(food.x + gridSize / 2, food.y + gridSize / 2, gridSize / 2 - 2, 0, Math.PI * 2);
+    ctx.arc(bird.x + bird.width / 2, bird.y + bird.height / 2, bird.width / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#d68910";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Eye
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(bird.x + bird.width / 2 + 5, bird.y + bird.height / 2 - 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(bird.x + bird.width / 2 + 6, bird.y + bird.height / 2 - 4, 2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw Player Snake (Cyan / Blue)
-    if (player.alive) {
-      player.body.forEach((segment, index) => {
-        ctx.fillStyle = index === 0 ? "#00d2d3" : "#54a0ff";
-        ctx.fillRect(segment.x + 1, segment.y + 1, gridSize - 2, gridSize - 2);
-      });
-    }
-
-    // Draw AI Bot Snakes (Red & Orange)
-    aiSnakes.forEach(bot => {
-      if (bot.alive) {
-        bot.body.forEach((segment, index) => {
-          ctx.fillStyle = bot.color;
-          ctx.fillRect(segment.x + 1, segment.y + 1, gridSize - 2, gridSize - 2);
-        });
-      }
-    });
+    // Beak
+    ctx.fillStyle = "#e67e22";
+    ctx.fillRect(bird.x + bird.width - 2, bird.y + bird.height / 2, 8, 5);
   }
 
-  // Keyboard Event Listener with e.preventDefault() so page doesn't scroll when playing!
-  window.addEventListener("keydown", (e) => {
-    const key = e.key.toLowerCase();
-
-    if (["arrowup", "arrowdown", "arrowleft", "arrowright", "w", "a", "s", "d"].includes(key)) {
-      e.preventDefault(); // Prevents browser scrolling while using game keys
+  function triggerGameOver() {
+    isGameOver = true;
+    isPlaying = false;
+    if (gameStatusMessage) {
+      gameStatusMessage.textContent = "💥 Game Over! Press Space or Restart to play again!";
     }
+  }
 
-    if ((key === "arrowup" || key === "w") && player.dy === 0) {
-      player.dx = 0;
-      player.dy = -gridSize;
-    } else if ((key === "arrowdown" || key === "s") && player.dy === 0) {
-      player.dx = 0;
-      player.dy = gridSize;
-    } else if ((key === "arrowleft" || key === "a") && player.dx === 0) {
-      player.dx = -gridSize;
-      player.dy = 0;
-    } else if ((key === "arrowright" || key === "d") && player.dx === 0) {
-      player.dx = gridSize;
-      player.dy = 0;
+  function gameLoop() {
+    update();
+    draw();
+    animationId = requestAnimationFrame(gameLoop);
+  }
+
+  // Keyboard Event Listener
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Space") {
+      e.preventDefault(); // Stop page scrolling on spacebar press
+      flap();
     }
   });
 
-  // Attach button click event to start game
+  // Mouse / Touch Event Listener on Canvas
+  canvas.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    flap();
+  });
+
   if (restartBtn) {
     restartBtn.addEventListener("click", startGame);
   }
 
-  // Draw initial blank state on load
-  draw();
+  // Start the render loop initially
+  startGame();
 });
