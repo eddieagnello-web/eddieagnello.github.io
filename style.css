@@ -13,7 +13,7 @@ body {
   transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Header section styling with a modern hero color */
+/* Header section styling */
 header {
   background-color: #4a90e2;
   color: white;
@@ -27,6 +27,9 @@ main {
   width: 90%;
   max-width: 600px;
   margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 /* Card component styling for clean text display */
@@ -60,10 +63,28 @@ button:hover {
 }
 
 /* Secret message styling updated by JS */
-#message {
-  margin-top: 1.5rem;
+#message, #gameStatusMessage {
+  margin-top: 1rem;
   font-weight: bold;
   color: #2e7d32;
+}
+
+/* Mini-Golf Canvas Styling */
+#golfCanvas {
+  background-color: #2e7d32; /* Grass green color */
+  border-radius: 10px;
+  border: 4px solid #1b4d1f;
+  cursor: crosshair;
+  max-width: 100%;
+}
+
+/* Scoreboard display */
+.game-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  font-weight: bold;
+  margin-top: 0.5rem;
 }
 
 /* Footer layout glued to bottom of screen */
@@ -75,24 +96,19 @@ footer {
 
 /* ===================================================
    DARK MODE STYLES
-   These styles apply when the 'dark-mode' class is added to body by JavaScript
    =================================================== */
 
 body.dark-mode {
-  /* Navy blue background color as requested */
   background-color: #0a192f;
-  /* White text color as requested */
   color: #ffffff;
 }
 
-/* Adjust card background in dark mode so content stays easy to read */
 body.dark-mode .card {
   background-color: #112240;
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
-/* Adjust footer text color in dark mode */
 body.dark-mode footer {
   color: #8892b0;
 }
