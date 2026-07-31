@@ -1,8 +1,29 @@
-/* Global Reset and Styling */
+/* Global Reset and Light Mode Variables (Default) */
+:root {
+    --bg-color: #f4f7f6;
+    --text-color: #333333;
+    --card-bg: #ffffff;
+    --footer-bg: #333333;
+    --footer-text: #ffffff;
+    --button-bg: #667eea;
+    --button-hover: #5563c1;
+}
+
+/* Dark Mode Theme Variables override light mode when dark-mode class is active */
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --footer-bg: #000000;
+    --footer-text: #b0b0b0;
+    --button-bg: #bb86fc;
+    --button-hover: #9955e8;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f7f6;
-    color: #333333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
     padding: 0;
     display: flex;
@@ -11,6 +32,33 @@ body {
     justify-content: space-between;
     align-items: center;
     text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Toggle Button Positioning */
+.theme-toggle-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 2rem;
+    box-sizing: border-box;
+}
+
+#themeToggleBtn {
+    background-color: transparent;
+    border: 2px solid var(--text-color);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0;
+}
+
+#themeToggleBtn:hover {
+    background-color: var(--text-color);
+    color: var(--bg-color);
 }
 
 /* Header Styling */
@@ -39,15 +87,16 @@ main {
 }
 
 .card {
-    background: white;
+    background: var(--card-bg);
     padding: 2rem;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease;
 }
 
 /* Button Styling */
 button {
-    background-color: #667eea;
+    background-color: var(--button-bg);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -59,14 +108,15 @@ button {
 }
 
 button:hover {
-    background-color: #5563c1;
+    background-color: var(--button-hover);
 }
 
 /* Footer Styling */
 footer {
-    background-color: #333333;
-    color: white;
+    background-color: var(--footer-bg);
+    color: var(--footer-text);
     width: 100%;
     padding: 1rem 0;
     font-size: 0.9rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
