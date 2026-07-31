@@ -3,8 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Awesome Website</title>
-  <link rel="stylesheet" href="style.css">
+  <title>My Awesome Website - Flappy Bird</title>
+  
+  <style>
+    /* Page Styling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      color: #333333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    header {
+      background-color: #4a90e2;
+      color: white;
+      width: 100%;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    main {
+      width: 90%;
+      max-width: 600px;
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .card {
+      background-color: white;
+      color: #333333;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    button {
+      background-color: #4a90e2;
+      color: white;
+      border: 2px solid white;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      margin: 0.5rem;
+    }
+
+    button:hover {
+      background-color: #357abd;
+      transform: scale(1.03);
+    }
+
+    #gameStatusMessage {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+
+    /* Flappy Canvas Styling */
+    #flappyCanvas {
+      background-color: #70c5ce;
+      border-radius: 10px;
+      border: 4px solid #4a90e2;
+      cursor: pointer;
+      max-width: 100%;
+      touch-action: manipulation;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      font-weight: bold;
+      margin-top: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 1rem;
+      color: #777777;
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background-color: #0a192f;
+      color: #ffffff;
+    }
+
+    body.dark-mode .card {
+      background-color: #112240;
+      color: #ffffff;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,25 +116,18 @@
   </header>
 
   <main>
-    <section class="card">
-      <h2>About Me</h2>
-      <p>Hi there! I'm creating my very first website hosted on GitHub Pages.</p>
-      <button id="magicBtn">Click Me for Magic!</button>
-      <p id="message"></p>
-    </section>
-
     <section class="card game-section">
       <h2>🐤 Flappy Bird</h2>
-      <p>Press <strong>Spacebar</strong> or <strong>Click/Tap</strong> the canvas to flap!</p>
+      <p>Click the game area or press <strong>Spacebar</strong> to flap!</p>
       
       <canvas id="flappyCanvas" width="360" height="480"></canvas>
       
       <div class="game-stats">
         <p>Score: <span id="scoreDisplay">0</span></p>
         <p>Best: <span id="highScoreDisplay">0</span></p>
-        <button id="restartGameBtn">🎮 Start / Restart Game</button>
+        <button id="restartGameBtn">🎮 Start / Restart</button>
       </div>
-      <p id="gameStatusMessage">Press Start or Spacebar to fly!</p>
+      <p id="gameStatusMessage">Click or press Spacebar to fly!</p>
     </section>
   </main>
 
@@ -41,6 +135,117 @@
     <p>Created with 💙 by a Web Developer</p>
   </footer>
 
-  <script src="script.js"></script>
-</body>
-</html>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Theme Toggle
+      const themeToggleBtn = document.getElementById("themeToggleBtn");
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener("click", () => {
+          document.body.classList.toggle("dark-mode");
+          themeToggleBtn.textContent = document.body.classList.contains("dark-mode")
+            ? "☀️ Switch to Light Mode"
+            : "🌙 Switch to Dark Mode";
+        });
+      }
+
+      // Game Setup
+      const canvas = document.getElementById("flappyCanvas");
+      const ctx = canvas.getContext("2d");
+      const scoreDisplay = document.getElementById("scoreDisplay");
+      const highScoreDisplay = document.getElementById("highScoreDisplay");
+      const gameStatusMessage = document.getElementById("gameStatusMessage");
+      const restartBtn = document.getElementById("restartGameBtn");
+
+      let bird = { x: 50, y: 150, radius: 12, gravity: 0.25, lift: -5.5, velocity: 0 };
+      let pipes = [];
+      let frameCount = 0;
+      let score = 0;
+      let highScore = 0;
+      let isPlaying = false;
+      let isGameOver = false;
+
+      const pipeWidth = 52;
+      const pipeGap = 120;
+      const pipeSpeed = 2;
+
+      function flap() {
+        if (isGameOver) {
+          resetGame();
+          isPlaying = true;
+          bird.velocity = bird.lift;
+          return;
+        }
+        if (!isPlaying) {
+          isPlaying = true;
+          gameStatusMessage.textContent = "Flying!";
+        }
+        bird.velocity = bird.lift;
+      }
+
+      function resetGame() {
+        bird.y = 150;
+        bird.velocity = 0;
+        pipes = [];
+        score = 0;
+        frameCount = 0;
+        isPlaying = false;
+        isGameOver = false;
+
+        scoreDisplay.textContent = score;
+        gameStatusMessage.textContent = "Click or press Spacebar to fly!";
+      }
+
+      function update() {
+        if (!isPlaying || isGameOver) return;
+
+        // Apply Gravity
+        bird.velocity += bird.gravity;
+        bird.y += bird.velocity;
+
+        // Ground & Ceiling Collisions
+        if (bird.y + bird.radius >= canvas.height - 20) {
+          bird.y = canvas.height - 20 - bird.radius;
+          triggerGameOver();
+        }
+        if (bird.y - bird.radius <= 0) {
+          bird.y = bird.radius;
+          bird.velocity = 0;
+        }
+
+        // Pipe Spawning
+        frameCount++;
+        if (frameCount % 90 === 0) {
+          const minHeight = 40;
+          const maxHeight = canvas.height - pipeGap - 60;
+          const topHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1)) + minHeight;
+
+          pipes.push({
+            x: canvas.width,
+            top: topHeight,
+            bottom: canvas.height - topHeight - pipeGap,
+            passed: false
+          });
+        }
+
+        // Pipe Movements & Collision Checks
+        pipes.forEach(pipe => {
+          pipe.x -= pipeSpeed;
+
+          // Box Hitbox checking vs Bird Center Radius
+          if (
+            bird.x + bird.radius > pipe.x &&
+            bird.x - bird.radius < pipe.x + pipeWidth
+          ) {
+            if (bird.y - bird.radius < pipe.top || bird.y + bird.radius > canvas.height - pipe.bottom) {
+              triggerGameOver();
+            }
+          }
+
+          // Score Increment
+          if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+            pipe.passed = true;
+            score++;
+            scoreDisplay.textContent = score;
+            if (score > highScore) {
+              highScore = score;
+              high
